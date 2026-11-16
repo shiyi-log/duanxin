@@ -1,0 +1,15 @@
+.venv*/
+__pycache__/
+*.py[cod]
+
+/eim_config.toml
+/ESP32-C3_flash_*.bin
+/FIRMWARE_REWRITE_PREP.md
+/my_uart_V2.1/
+/my_uart_V2.1.rar
+/WIFI*
+
+/esp32c3_firmware/build*/
+/esp32c3_firmware/sdkconfig
+/esp32c3_firmware/sdkconfig.old
+/esp32c3_firmware/secrets.local.h

@@ -1,0 +1,39 @@
+menu "WiFi Forwarder"
+
+config FW_AP_SSID
+    string "Configuration AP name"
+    default "SMS-Forwarder"
+
+config FW_AP_PASSWORD
+    string "Configuration AP password"
+    default ""
+    help
+        Set this locally before building. At least 8 characters are required.
+
+config FW_WEB_ADMIN_PASSWORD
+    string "Configuration page administrator password"
+    default ""
+    help
+        This is separate from the AP password. At least 12 characters are required.
+
+config FW_MODEM_UART_NUM
+    int "ML307A UART number (-1 disables modem)"
+    range -1 2
+    default -1
+
+config FW_MODEM_TX_GPIO
+    int "ML307A UART TX GPIO (-1 disables modem)"
+    range -1 21
+    default -1
+
+config FW_MODEM_RX_GPIO
+    int "ML307A UART RX GPIO (-1 disables modem)"
+    range -1 21
+    default -1
+
+config FW_MODEM_BAUD
+    int "ML307A UART baud rate"
+    range 1200 921600
+    default 115200
+
+endmenu

@@ -1,0 +1,22 @@
+idf_component_register(
+    SRCS
+        "app_main.c"
+        "boot_guard.c"
+        "config_store.c"
+        "fw_config.c"
+        "maintenance.c"
+        "modem_service.c"
+        "web_server.c"
+    INCLUDE_DIRS "."
+    REQUIRES
+        app_update
+        esp_event
+        esp_driver_uart
+        esp_http_server
+        esp_netif
+        esp_wifi
+        json
+        nvs_flash
+        spiffs
+        mbedtls
+)

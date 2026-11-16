@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>WiFi 转发宝维护</title>
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">ESP32-C3 · ML307A</p>
+      <h1>WiFi 转发宝</h1>
+    </div>
+    <div class="toolbar">
+      <span id="connection-state" class="state state-idle">未连接</span>
+      <button id="refresh-button" class="icon-button" title="刷新状态" aria-label="刷新状态">↻</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="status-strip" aria-label="设备状态">
+      <div><span>固件</span><strong id="status-version">--</strong></div>
+      <div><span>运行模式</span><strong id="status-mode">--</strong></div>
+      <div><span>Wi-Fi 上行</span><strong id="status-wifi">--</strong></div>
+      <div><span>救援模式</span><strong id="status-safe">--</strong></div>
+    </section>
+
+    <section id="transport-section" class="transport-section">
+      <div id="usb-transport" class="transport hidden">
+        <button id="connect-button" class="primary-button">连接 USB</button>
+        <button id="disconnect-button" class="quiet-button hidden">断开</button>
+        <span class="subtle">串口控制台</span>
+      </div>
+      <form id="login-form" class="transport hidden">
+        <label for="admin-password">网页管理员密码</label>
+        <input id="admin-password" type="password" autocomplete="current-password" required>
+        <button class="primary-button" type="submit">解锁</button>
+      </form>
+    </section>
+
+    <div class="workspace">
+      <section class="settings-area">
+        <div class="section-heading">
+          <h2>设备配置</h2>
+          <div class="actions">
+            <button id="export-button" class="quiet-button">导出配置</button>
+            <label class="file-button">导入配置<input id="import-file" type="file" accept="application/json,.json"></label>
+            <button id="save-button" class="primary-button" disabled>保存设置</button>
+          </div>
+        </div>
+        <p id="notice" class="notice" role="status">连接设备后读取配置。</p>
+        <form id="config-form">
+          <fieldset disabled>
+            <div class="field-grid">
+              <label class="field"><span>网络承载</span><select name="mode"><option value="wifi">Wi-Fi</option><option value="cellular">4G</option></select></label>
+              <label class="field"><span>Wi-Fi 名称</span><input name="wifi_ssid" maxlength="32" autocomplete="off"></label>
+              <label class="field secret"><span>Wi-Fi 密码</span><input name="wifi_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="wifi_password"> 清除已保存密码</span></label>
+              <label class="field"><span>备用 Wi-Fi 名称</span><input name="wifi2_ssid" maxlength="32" autocomplete="off"></label>
+              <label class="field secret"><span>备用 Wi-Fi 密码</span><input name="wifi2_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="wifi2_password"> 清除已保存密码</span></label>
+              <label class="field"><span>管理员手机号</span><input name="admin_phone" maxlength="23" autocomplete="off"></label>
+              <label class="field"><span>本机手机号</span><input name="own_phone" maxlength="23" autocomplete="off"></label>
+              <label class="field"><span>备注</span><input name="note" maxlength="95"></label>
+              <label class="field"><span>心跳间隔（秒）</span><input name="heartbeat_sec" type="number" min="60" max="604800"></label>
+              <label class="field"><span>保活间隔（秒）</span><input name="keepalive_sec" type="number" min="300" max="2592000"></label>
+              <label class="field"><span>SMTP 服务器</span><input name="smtp_host" maxlength="127"></label>
+              <label class="field"><span>SMTP 端口</span><input name="smtp_port" inputmode="numeric" maxlength="7"></label>
+              <label class="field"><span>SMTP 用户</span><input name="smtp_user" maxlength="95"></label>
+              <label class="field secret"><span>SMTP 密码</span><input name="smtp_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="smtp_password"> 清除已保存密码</span></label>
+              <label class="field"><span>SMTP 收件地址</span><input name="smtp_to" maxlength="127"></label>
+              <label class="field secret"><span>PushPlus Token</span><input name="pushplus_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="pushplus_token"> 清除已保存密钥</span></label>
+              <label class="field"><span>Gotify 地址</span><input name="gotify_url" maxlength="191"></label>
+              <label class="field secret"><span>Gotify Token</span><input name="gotify_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="gotify_token"> 清除已保存密钥</span></label>
+              <label class="field secret"><span>Telegram Bot Token</span><input name="telegram_bot_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="telegram_bot_token"> 清除已保存密钥</span></label>
+              <label class="field"><span>Telegram Chat ID</span><input name="telegram_chat_id" maxlength="63"></label>
+              <label class="field"><span>推送服务器地址</span><input name="server_url" maxlength="191"></label>
+              <label class="field secret"><span>推送服务器 Token</span><input name="server_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="server_token"> 清除已保存密钥</span></label>
+              <label class="field secret"><span>配置 AP 密码</span><input name="ap_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="ap_password"> 清除已保存密码</span></label>
+              <label class="field secret"><span>网页管理员密码</span><input name="web_admin_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="web_admin_password"> 清除已保存密码</span></label>
+            </div>
+          </fieldset>
+        </form>
+
+        <section id="ota-section" class="ota-section hidden">
+          <h3>固件更新</h3>
+          <form id="ota-form">
+            <input id="firmware-file" type="file" accept=".bin,application/octet-stream" required>
+            <button class="quiet-button" type="submit">上传并重启</button>
+          </form>
+        </section>
+
+        <section class="maintenance-actions">
+          <button id="reboot-button" class="quiet-button" disabled>重启设备</button>
+          <button id="reset-button" class="danger-button" disabled>恢复默认配置</button>
+        </section>
+      </section>
+
+      <aside class="log-panel">
+        <div class="section-heading"><h2>设备日志</h2><button id="logs-button" class="icon-button" title="读取日志" aria-label="读取日志">↻</button></div>
+        <pre id="log-output" aria-live="polite"></pre>
+      </aside>
+    </div>
+  </main>
+  <script src="/app.js" defer></script>
+</body>
+</html>
