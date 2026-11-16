@@ -1,6 +1,7 @@
 #include "fw_config.h"
 
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
 #include "esp_log.h"
@@ -45,25 +46,36 @@ static bool read_slot(int slot, fw_config_t *config)
 
 esp_err_t config_store_load(fw_config_t *config)
 {
-    fw_config_t a = {0};
-    fw_config_t b = {0};
-    bool valid_a = read_slot(0, &a);
-    bool valid_b = read_slot(1, &b);
+    if (!config) return ESP_ERR_INVALID_ARG;
+
+    fw_config_t *candidate = malloc(sizeof(*candidate));
+    if (!candidate) {
+        s_active_slot = -1;
+        fw_config_defaults(config);
+        return ESP_ERR_NO_MEM;
+    }
+    memset(candidate, 0, sizeof(*candidate));
+
+    bool valid_a = read_slot(0, config);
+    bool valid_b = read_slot(1, candidate);
+    esp_err_t result = ESP_OK;
     if (!valid_a && !valid_b) {
         s_active_slot = -1;
         fw_config_defaults(config);
-        return ESP_ERR_NOT_FOUND;
-    }
-    if (valid_a && (!valid_b || (int32_t)(a.generation - b.generation) > 0)) {
-        *config = a;
+        result = ESP_ERR_NOT_FOUND;
+    } else if (valid_a && (!valid_b || (int32_t)(config->generation - candidate->generation) > 0)) {
         s_active_slot = 0;
     } else {
-        *config = b;
+        *config = *candidate;
         s_active_slot = 1;
     }
-    ESP_LOGI(TAG, "Loaded configuration generation %lu",
-             (unsigned long)config->generation);
-    return ESP_OK;
+    if (result == ESP_OK) {
+        ESP_LOGI(TAG, "Loaded configuration generation %lu",
+                 (unsigned long)config->generation);
+    }
+    memset(candidate, 0, sizeof(*candidate));
+    free(candidate);
+    return result;
 }
 
 esp_err_t config_store_save(fw_config_t *config)

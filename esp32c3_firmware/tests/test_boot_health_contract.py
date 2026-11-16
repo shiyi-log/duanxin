@@ -34,6 +34,16 @@ def c_block_after(source, marker):
 
 
 class BootHealthContractTests(unittest.TestCase):
+    def test_config_load_uses_heap_scratch_instead_of_large_stack_copies(self):
+        source = (ROOT / "main" / "config_store.c").read_text(encoding="utf-8")
+        body = c_function_body(source, "esp_err_t config_store_load(fw_config_t *config)")
+
+        self.assertIn("fw_config_t *candidate = malloc(sizeof(*candidate));", body)
+        self.assertNotIn("fw_config_t a", body)
+        self.assertNotIn("fw_config_t b", body)
+        self.assertIn("return ESP_ERR_NO_MEM", body)
+        self.assertIn("free(candidate)", body)
+
     def test_ota_confirmation_waits_for_required_services(self):
         source = (ROOT / "main" / "app_main.c").read_text(encoding="utf-8")
         body = c_function_body(source, "void app_main(void)")
