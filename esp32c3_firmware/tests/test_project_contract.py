@@ -37,6 +37,33 @@ class ProjectContractTests(unittest.TestCase):
         self.assertIn("name=\"web_admin_password\"", page)
         self.assertIn("data-clear=\"ap_password\"", page)
 
+    def test_setup_and_formal_views_keep_pending_product_capabilities_visible(self):
+        page = (ROOT / "web" / "index.html").read_text(encoding="utf-8")
+        script = (ROOT / "web" / "app.js").read_text(encoding="utf-8")
+        self.assertIn("SMS-Forwarder-AP", page)
+        self.assertIn("ESP32-AP-xxxxxx", page)
+        self.assertIn("SMS:factory reset", page)
+        self.assertIn("SMS:get ip", page)
+        self.assertIn("MIX 模式", page)
+        self.assertIn("来电提醒", page)
+        self.assertIn("Bark", page)
+        self.assertIn('id="setup-admin-phone"', page)
+        self.assertIn("短信管理授权号码", page)
+        self.assertIn("请先设置管理员手机号", script)
+
+    def test_usb_console_has_buffered_io_and_stack_for_configuration_operations(self):
+        source = (ROOT / "main" / "maintenance.c").read_text(encoding="utf-8")
+        task = source.split("static void maintenance_task(void *arg)", 1)[1].split(
+            "\nesp_err_t maintenance_start", 1
+        )[0]
+        self.assertIn("static char line[CONSOLE_LINE_SIZE];", task)
+        self.assertIn('xTaskCreate(maintenance_task, "usb_maintenance", 12288,', source)
+        self.assertIn("usb_serial_jtag_driver_install(&usb_config)", source)
+        self.assertIn("usb_config.rx_buffer_size = CONSOLE_LINE_SIZE;", source)
+        self.assertIn("usb_serial_jtag_vfs_use_driver();", source)
+        build = (ROOT / "main" / "CMakeLists.txt").read_text(encoding="utf-8")
+        self.assertIn("esp_driver_usb_serial_jtag", build)
+
 
 if __name__ == "__main__":
     unittest.main()

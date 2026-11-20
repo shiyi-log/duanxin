@@ -9,6 +9,8 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_spiffs.h"
+#include "lwip/inet.h"
+#include "lwip/sockets.h"
 #include "mbedtls/constant_time.h"
 #include "maintenance.h"
 
@@ -28,6 +30,46 @@ static bool authorized(httpd_req_t *request)
     size_t supplied_len = strlen(supplied);
     size_t expected_len = strlen(expected);
     return supplied_len == expected_len && mbedtls_ct_memcmp(supplied, expected, expected_len) == 0;
+}
+
+static bool recovery_setup_operation(const cJSON *op)
+{
+    if (!cJSON_IsString(op) || !op->valuestring) return false;
+    return strcmp(op->valuestring, "config.get") == 0 ||
+           strcmp(op->valuestring, "config.set") == 0 ||
+           strcmp(op->valuestring, "config.clear") == 0 ||
+           strcmp(op->valuestring, "config.save") == 0 ||
+           strcmp(op->valuestring, "wifi.scan") == 0;
+}
+
+static bool recovery_client_on_device_ap(httpd_req_t *request)
+{
+    struct sockaddr_storage peer = {0};
+    socklen_t peer_size = sizeof(peer);
+    int fd = httpd_req_to_sockfd(request);
+    int peer_result = getpeername(fd, (struct sockaddr *)&peer, &peer_size);
+    if (peer_result != 0) {
+        ESP_LOGW(TAG, "Recovery AP peer lookup failed: rc=%d", peer_result);
+        return false;
+    }
+
+    uint32_t peer_addr;
+    if (peer.ss_family == AF_INET) {
+        const struct sockaddr_in *peer4 = (const struct sockaddr_in *)&peer;
+        peer_addr = peer4->sin_addr.s_addr;
+    } else if (peer.ss_family == AF_INET6) {
+        const struct sockaddr_in6 *peer6 = (const struct sockaddr_in6 *)&peer;
+        if (!IN6_IS_ADDR_V4MAPPED(&peer6->sin6_addr)) return false;
+        memcpy(&peer_addr, &peer6->sin6_addr.s6_addr[12], sizeof(peer_addr));
+    } else {
+        return false;
+    }
+
+    uint32_t peer_host = ntohl(peer_addr);
+    bool on_device_ap = (peer_host & 0xFFFFFF00u) == 0xC0A80400u;
+    ESP_LOGD(TAG, "Recovery AP peer=%08lx allowed=%d",
+             (unsigned long)peer_host, on_device_ap);
+    return on_device_ap;
 }
 
 static esp_err_t send_json(httpd_req_t *request, cJSON *json)
@@ -78,6 +120,36 @@ static esp_err_t index_handler(httpd_req_t *request)
     return httpd_resp_send_chunk(request, NULL, 0);
 }
 
+static esp_err_t asset_handler(httpd_req_t *request)
+{
+    const char *path = NULL;
+    const char *content_type = NULL;
+    if (strcmp(request->uri, "/style.css") == 0) {
+        path = "/spiffs/style.css";
+        content_type = "text/css; charset=utf-8";
+    } else if (strcmp(request->uri, "/app.js") == 0) {
+        path = "/spiffs/app.js";
+        content_type = "application/javascript; charset=utf-8";
+    } else {
+        return httpd_resp_send_err(request, HTTPD_404_NOT_FOUND, "asset not found");
+    }
+
+    FILE *file = fopen(path, "rb");
+    if (!file) return httpd_resp_send_err(request, HTTPD_404_NOT_FOUND, "asset unavailable");
+    httpd_resp_set_type(request, content_type);
+    char buffer[1024];
+    size_t count;
+    while ((count = fread(buffer, 1, sizeof(buffer), file)) > 0) {
+        if (httpd_resp_send_chunk(request, buffer, count) != ESP_OK) {
+            fclose(file);
+            httpd_resp_sendstr_chunk(request, NULL);
+            return ESP_FAIL;
+        }
+    }
+    fclose(file);
+    return httpd_resp_send_chunk(request, NULL, 0);
+}
+
 static esp_err_t maintenance_handler(httpd_req_t *request)
 {
     char *body = read_request_body(request, API_BODY_LIMIT);
@@ -87,7 +159,9 @@ static esp_err_t maintenance_handler(httpd_req_t *request)
     if (!input) return httpd_resp_send_err(request, HTTPD_400_BAD_REQUEST, "invalid JSON");
     const cJSON *op = cJSON_GetObjectItemCaseSensitive(input, "op");
     bool is_status = cJSON_IsString(op) && strcmp(op->valuestring, "status") == 0;
-    if (!is_status && !authorized(request)) {
+    bool recovery_setup = g_app_runtime.safe_mode && g_app_runtime.ap_active &&
+                          recovery_setup_operation(op) && recovery_client_on_device_ap(request);
+    if (!is_status && !authorized(request) && !recovery_setup) {
         cJSON_Delete(input);
         return httpd_resp_send_err(request, HTTPD_401_UNAUTHORIZED, "administrator password required");
     }
@@ -161,9 +235,13 @@ esp_err_t web_server_start(void)
     if (err != ESP_OK) return err;
 
     httpd_uri_t index = {.uri = "/", .method = HTTP_GET, .handler = index_handler};
+    httpd_uri_t style = {.uri = "/style.css", .method = HTTP_GET, .handler = asset_handler};
+    httpd_uri_t script = {.uri = "/app.js", .method = HTTP_GET, .handler = asset_handler};
     httpd_uri_t api = {.uri = "/api/maintenance", .method = HTTP_POST, .handler = maintenance_handler};
     httpd_uri_t ota = {.uri = "/api/ota", .method = HTTP_POST, .handler = ota_handler};
     if ((err = httpd_register_uri_handler(s_server, &index)) != ESP_OK ||
+        (err = httpd_register_uri_handler(s_server, &style)) != ESP_OK ||
+        (err = httpd_register_uri_handler(s_server, &script)) != ESP_OK ||
         (err = httpd_register_uri_handler(s_server, &api)) != ESP_OK ||
         (err = httpd_register_uri_handler(s_server, &ota)) != ESP_OK) {
         httpd_stop(s_server);

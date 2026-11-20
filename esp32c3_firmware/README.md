@@ -7,14 +7,14 @@
 - USB Serial/JTAG 维护控制台在 Wi-Fi 初始化前可用。
 - 配置使用带版本号和 CRC 校验的 NVS 双槽存储；启动流程不会自动擦除 NVS。
 - 连续启动失败保护和 USB 安全模式用于故障恢复。
-- 网络采用 AP+STA 模式；STA 连接上游网络时，配置 AP 仍保持运行。
+- 初次启动约 10 秒后广播 `SMS-Forwarder-AP` 供配网；STA 成功连接上游 Wi-Fi 后关闭 AP，已配置设备后续失去上游 Wi-Fi 时广播 `ESP32-AP-xxxxxx` 恢复入口。
 - SPIFFS 提供配置页面；支持本地 WebSerial 维护、配置导入导出和带认证的 OTA 上传。
 - 使用双应用分区，并启用 bootloader 应用回滚。
 - ML307A UART 传输默认关闭。当前尚未验证开发板 UART 引脚、控制引脚和波特率；确认硬件参数前不得启用蜂窝消息或通知功能。
 
 ## 安全配置
 
-新固件不会迁移原固件中的 Wi-Fi、手机号或业务配置。设备首次使用时，应通过 USB 维护入口或配置页面重新录入。
+新固件不会迁移原固件中的 Wi-Fi、手机号或业务配置。首次启动不会自动把默认模板标记为已初始化；设备会保持 USB 维护通道可用，并在启动约 10 秒后提供配网 AP。通过配网 AP 访问页面时，安全恢复模式只开放配置读取、Wi-Fi 扫描和配置写入/保存，且要求客户端来自设备 AP 子网。AP 与网页密码应设置为强口令；若编译配置中没有 AP 密码，初次配网 AP 会开放广播，附近人员可能连接，因此建议先用 USB 完成初始化或在本地构建时设置 AP 密码。
 
 构建前在 `idf.py menuconfig` 的 **WiFi Forwarder** 菜单配置两项不同的本地密钥：
 
@@ -59,6 +59,16 @@ node --test tests/webserial_teardown.test.js
 
 这些测试检查分区布局、关键启动配置、恢复约束和 WebSerial 连接清理逻辑；通过测试不等同于已在实体设备上完成验证。
 
+设备处于首次初始化安全模式且电脑已连接设备 AP 时，可额外运行只读 HTTP 冒烟测试：
+
+```powershell
+$env:ESP32_TEST_BASE_URL = "http://192.168.4.1"
+python -m unittest discover -s tests -p "test_live_device_http.py"
+Remove-Item Env:ESP32_TEST_BASE_URL
+```
+
+该测试核对设备页面资源与工作区是否一致、状态/配置脱敏、Wi-Fi 扫描和未授权请求拒绝；扫描只改变当前运行中的无线模式，不保存配置或重启设备。
+
 ## USB 维护
 
 通过设备的 USB Serial/JTAG COM 端口以 `115200` 波特率连接。常用文本命令如下：
@@ -82,9 +92,19 @@ reboot
 {"v":1,"id":"1","op":"status"}
 ```
 
-响应以 `@` 开头，并回传相同的 `id`。支持的操作包括 `status`、`logs`、`config.get`、`config.set`、`config.clear`、`config.save`、`config.import`、`config.export`、`config.reset`、`ota.status`、`ota.rollback`、`recovery.clear` 和 `reboot`。
+响应以 `@` 开头，并回传相同的 `id`。支持的操作包括 `status`、`logs`、`wifi.scan`、`config.get`、`config.set`、`config.clear`、`config.save`、`config.import`、`config.export`、`config.reset`、`ota.status`、`ota.rollback`、`recovery.clear` 和 `reboot`。
 
-## 本地 WebSerial 面板
+### USB 维护烟测
+
+在 Windows PowerShell 中运行以下命令，可检查 USB 状态、密钥脱敏、日志崩溃特征、OTA 状态、帮助响应和输入拒绝路径：
+
+```powershell
+.\tests\test_live_device_usb.ps1 -PortName COM3
+```
+
+该脚本会发送必然被拒绝的超长 SSID、非法心跳数字、溢出值和负数 `config.set` 请求，并核对配置未变化；不会调用 `config.save`，也不执行 Wi-Fi 扫描、复位或 OTA 操作。
+
+## 本地初始化与 WebSerial 面板
 
 在本目录启动本地维护面板：
 
@@ -92,7 +112,9 @@ reboot
 python .\tools\usb_panel\serve.py
 ```
 
-然后在桌面版 Chrome 或 Edge 打开 `http://127.0.0.1:8765/` 并连接 USB。服务仅绑定本机回环地址，页面由本机提供，无需互联网连接。
+然后在桌面版 Chrome 或 Edge 打开 `http://127.0.0.1:8765/`。默认显示初始化/故障恢复向导；扫描已授权 USB 设备，首次使用通过浏览器弹窗授权。初始化保存成功后，页面切换到正式管理端。服务仅绑定本机回环地址，页面由本机提供，无需互联网连接。
+
+手机配网时，连接设备广播的 AP 并在浏览器打开 `http://192.168.4.1/`。已连接上游 Wi-Fi 后，设备会关闭 AP；后续上游 Wi-Fi 断开时，设备使用 `ESP32-AP-` 加设备 MAC 末三字节十六进制后缀重新广播。
 
 ## 分区布局
 

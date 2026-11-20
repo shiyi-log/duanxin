@@ -1,0 +1,30 @@
+Command: cmake -G Ninja -DPYTHON_DEPS_CHECKED=1 -DPYTHON=C:\Espressif\tools\python\v5.5.1\venv\Scripts\python.exe -DESP_PLATFORM=1 -DIDF_TARGET=esp32c3 -DCCACHE_ENABLE=1 C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware
+CMake Error at C:/Espressif/tools/cmake/3.30.2/share/cmake-3.30/Modules/CMakeTestCCompiler.cmake:67 (message):
+  The C compiler
+
+    "C:/Espressif/tools/riscv32-esp-elf/esp-14.2.0_20241119/riscv32-esp-elf/bin/riscv32-esp-elf-gcc.exe"
+
+  is not able to compile a simple test program.
+
+  It fails with the following output:
+
+    Change Dir: 'C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/build-c3/CMakeFiles/CMakeScratch/TryCompile-qd5het'
+    
+    Run Build Command(s): C:/Espressif/tools/ninja/1.12.1/ninja.exe -v cmTC_6997e
+    [1/2] C:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20241119\riscv32-esp-elf\bin\riscv32-esp-elf-gcc.exe   -march=rv32imc_zicsr_zifencei -o CMakeFiles\cmTC_6997e.dir\testCCompiler.c.obj -c C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware\build-c3\CMakeFiles\CMakeScratch\TryCompile-qd5het\testCCompiler.c
+    FAILED: CMakeFiles/cmTC_6997e.dir/testCCompiler.c.obj 
+    C:\Espressif\tools\riscv32-esp-elf\esp-14.2.0_20241119\riscv32-esp-elf\bin\riscv32-esp-elf-gcc.exe   -march=rv32imc_zicsr_zifencei -o CMakeFiles\cmTC_6997e.dir\testCCompiler.c.obj -c C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware\build-c3\CMakeFiles\CMakeScratch\TryCompile-qd5het\testCCompiler.c
+    riscv32-esp-elf-gcc.exe: fatal error: cannot execute 'cc1': CreateProcess: No such file or directory
+    compilation terminated.
+    ninja: build stopped: subcommand failed.
+    
+    
+
+  
+
+  CMake will not be able to correctly generate this project.
+Call Stack (most recent call first):
+  C:/Espressif/v5.5.1/esp-idf/tools/cmake/project.cmake:589 (__project)
+  CMakeLists.txt:4 (project)
+
+

@@ -12,10 +12,12 @@ idf_component_register(
         app_update
         esp_event
         esp_driver_uart
+        esp_driver_usb_serial_jtag
         esp_http_server
         esp_netif
         esp_wifi
         json
+        lwip
         nvs_flash
         spiffs
         mbedtls

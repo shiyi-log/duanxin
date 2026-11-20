@@ -1,0 +1,66 @@
+Command: C:\Espressif\tools\python\v5.5.1\venv\Scripts\python.exe C:\Espressif\v5.5.1\esp-idf\tools/idf_monitor.py -p COM3 -b 115200 --toolchain-prefix riscv32-esp-elf- --target esp32c3 --revision 3 --decode-panic backtrace C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware\build-c3-clean\wifi_forwarder.elf C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware\build-c3-clean\bootloader\bootloader.elf --force-color -m 'C:\Espressif\tools\python\v5.5.1\venv\Scripts\python.exe' 'C:\Espressif\v5.5.1\esp-idf\tools\idf.py' '-B' 'build-c3-clean' '-p' 'COM3'
+--- WARNING: GDB cannot open serial ports accessed as COMx
+--- NOTE: Using \\.\COM3 instead...
+--- esp-idf-monitor 1.10.0 on \\.\COM3 115200
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H
+--- 0x42008a4a: config_store_load at C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/main/config_store.c:47
+--- Stack dump detected
+--- 0x42008a4c: config_store_load at C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/main/config_store.c:48
+--- 0x420084d8: app_main at C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/main/app_main.c:125
+--- 0x4005890e: memset in ROM
+--- 0x400510a0: Cache_Resume_ICache_Autoload in ROM
+--- 0x420ac4d6: panic_print_char_usb_serial_jtag at C:/Espressif/v5.5.1/esp-idf/components/esp_system/panic.c:122
+--- 0x403cbf10: esp_bootloader_get_description at C:/Espressif/v5.5.1/esp-idf/components/esp_bootloader_format/esp_bootloader_desc.c:39
+--- 0x403ce710: esp_flash_encryption_enabled at C:/Espressif/v5.5.1/esp-idf/components/bootloader_support/src/flash_encrypt.c:89
+--- 0x403cbf1a: call_start_cpu0 at C:/Espressif/v5.5.1/esp-idf/components/bootloader/subproject/main/bootloader_start.c:25
+--- 0x42008a4a: config_store_load at C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/main/config_store.c:47
+--- 0x42008a4c: config_store_load at C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/main/config_store.c:48
+--- 0x420084d8: app_main at C:/Users/399/Documents/ChatGPT/duanxin/esp32c3_firmware/main/app_main.c:125
+--- 0x4005890e: memset in ROM
+--- 0x400510a0: Cache_Resume_ICache_Autoload in ROM
+--- 0x40380001: _vector_table at C:/Espressif/v5.5.1/esp-idf/components/riscv/vectors_intc.S:54
+
+Traceback (most recent call last):
+  File "C:\Program Files\Python310\lib\runpy.py", line 196, in _run_module_as_main
+    return _run_code(code, main_globals, None,
+  File "C:\Program Files\Python310\lib\runpy.py", line 86, in _run_code
+    exec(code, run_globals)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\__main__.py", line 7, in <module>
+    main()
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\idf_monitor.py", line 674, in main
+    _cli_invoke(_run_monitor)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\base\argument_parser.py", line 207, in invoke
+    cli.main(args=argv, obj=runner, standalone_mode=True)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\rich_click\rich_command.py", line 215, in main
+    rv = self.invoke(ctx)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\click\core.py", line 1443, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\click\core.py", line 788, in invoke
+    return __callback(*args, **kwargs)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\click\decorators.py", line 33, in new_func
+    return f(get_current_context(), *args, **kwargs)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\base\argument_parser.py", line 197, in cli
+    runner(**kwargs)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\idf_monitor.py", line 642, in _run_monitor
+    monitor.main_loop()
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\idf_monitor.py", line 294, in main_loop
+    self._main_loop()
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\idf_monitor.py", line 439, in _main_loop
+    super()._main_loop()
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\idf_monitor.py", line 347, in _main_loop
+    self.serial_handler.handle_serial_input(
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\base\serial_handler.py", line 251, in handle_serial_input
+    self.check_panic_decode_trigger(line_strip)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_monitor\base\serial_handler.py", line 330, in check_panic_decode_trigger
+    out = self.panic_handler.process_panic_output(self._panic_buffer)
+  File "C:\Espressif\tools\python\v5.5.1\venv\lib\site-packages\esp_idf_panic_decoder\panic_output_decoder.py", line 45, in process_panic_output
+    output = subprocess.check_output(cmd, stderr=subprocess.STDOUT)
+  File "C:\Program Files\Python310\lib\subprocess.py", line 421, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+  File "C:\Program Files\Python310\lib\subprocess.py", line 503, in run
+    with Popen(*popenargs, **kwargs) as process:
+  File "C:\Program Files\Python310\lib\subprocess.py", line 971, in __init__
+    self._execute_child(args, executable, preexec_fn, close_fds,
+  File "C:\Program Files\Python310\lib\subprocess.py", line 1456, in _execute_child
+    hp, ht, pid, tid = _winapi.CreateProcess(executable, args,
+OSError: [WinError 4551] 应用程序控制策略已阻止此文件。

@@ -1,9 +1,5 @@
 menu "WiFi Forwarder"
 
-config FW_AP_SSID
-    string "Configuration AP name"
-    default "SMS-Forwarder"
-
 config FW_AP_PASSWORD
     string "Configuration AP password"
     default ""

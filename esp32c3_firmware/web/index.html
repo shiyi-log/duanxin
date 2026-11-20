@@ -3,104 +3,225 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>WiFi 转发宝维护</title>
+  <meta name="theme-color" content="#f4f6f7">
+  <title>WiFi 转发宝 · 设备管理</title>
   <link rel="stylesheet" href="/style.css">
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <p class="eyebrow">ESP32-C3 · ML307A</p>
-      <h1>WiFi 转发宝</h1>
-    </div>
-    <div class="toolbar">
-      <span id="connection-state" class="state state-idle">未连接</span>
-      <button id="refresh-button" class="icon-button" title="刷新状态" aria-label="刷新状态">↻</button>
-    </div>
-  </header>
-
-  <main>
-    <section class="status-strip" aria-label="设备状态">
-      <div><span>固件</span><strong id="status-version">--</strong></div>
-      <div><span>运行模式</span><strong id="status-mode">--</strong></div>
-      <div><span>Wi-Fi 上行</span><strong id="status-wifi">--</strong></div>
-      <div><span>救援模式</span><strong id="status-safe">--</strong></div>
-    </section>
-
-    <section id="transport-section" class="transport-section">
-      <div id="usb-transport" class="transport hidden">
-        <button id="connect-button" class="primary-button">连接 USB</button>
-        <button id="disconnect-button" class="quiet-button hidden">断开</button>
-        <span class="subtle">串口控制台</span>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <a class="brand" href="#top" aria-label="WiFi 转发宝">
+        <span class="brand-mark">WF</span>
+        <span><strong>转发宝</strong><small>设备管理</small></span>
+      </a>
+      <nav id="management-nav" class="side-nav hidden" aria-label="管理导航">
+        <a class="nav-item active" href="#overview"><span class="nav-glyph">O</span>设备概览</a>
+        <a class="nav-item" href="#network-settings"><span class="nav-glyph">N</span>网络与流量</a>
+        <a class="nav-item" href="#service-settings"><span class="nav-glyph">S</span>通知与心跳</a>
+        <a class="nav-item" href="#maintenance"><span class="nav-glyph">M</span>维护日志</a>
+      </nav>
+      <div class="sidebar-foot">
+        <span class="led" aria-hidden="true"></span>
+        <span id="sidebar-connection">等待设备连接</span>
       </div>
-      <form id="login-form" class="transport hidden">
-        <label for="admin-password">网页管理员密码</label>
-        <input id="admin-password" type="password" autocomplete="current-password" required>
-        <button class="primary-button" type="submit">解锁</button>
-      </form>
-    </section>
+    </aside>
 
-    <div class="workspace">
-      <section class="settings-area">
-        <div class="section-heading">
-          <h2>设备配置</h2>
-          <div class="actions">
-            <button id="export-button" class="quiet-button">导出配置</button>
-            <label class="file-button">导入配置<input id="import-file" type="file" accept="application/json,.json"></label>
-            <button id="save-button" class="primary-button" disabled>保存设置</button>
-          </div>
+    <div class="main-column" id="top">
+      <header class="topbar">
+        <div class="page-title">
+          <p class="eyebrow">ESP32-C3 · ML307 系列</p>
+          <h1 id="page-heading">设备初始化</h1>
         </div>
-        <p id="notice" class="notice" role="status">连接设备后读取配置。</p>
-        <form id="config-form">
-          <fieldset disabled>
-            <div class="field-grid">
-              <label class="field"><span>网络承载</span><select name="mode"><option value="wifi">Wi-Fi</option><option value="cellular">4G</option></select></label>
-              <label class="field"><span>Wi-Fi 名称</span><input name="wifi_ssid" maxlength="32" autocomplete="off"></label>
-              <label class="field secret"><span>Wi-Fi 密码</span><input name="wifi_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="wifi_password"> 清除已保存密码</span></label>
-              <label class="field"><span>备用 Wi-Fi 名称</span><input name="wifi2_ssid" maxlength="32" autocomplete="off"></label>
-              <label class="field secret"><span>备用 Wi-Fi 密码</span><input name="wifi2_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="wifi2_password"> 清除已保存密码</span></label>
-              <label class="field"><span>管理员手机号</span><input name="admin_phone" maxlength="23" autocomplete="off"></label>
-              <label class="field"><span>本机手机号</span><input name="own_phone" maxlength="23" autocomplete="off"></label>
-              <label class="field"><span>备注</span><input name="note" maxlength="95"></label>
-              <label class="field"><span>心跳间隔（秒）</span><input name="heartbeat_sec" type="number" min="60" max="604800"></label>
-              <label class="field"><span>保活间隔（秒）</span><input name="keepalive_sec" type="number" min="300" max="2592000"></label>
-              <label class="field"><span>SMTP 服务器</span><input name="smtp_host" maxlength="127"></label>
-              <label class="field"><span>SMTP 端口</span><input name="smtp_port" inputmode="numeric" maxlength="7"></label>
-              <label class="field"><span>SMTP 用户</span><input name="smtp_user" maxlength="95"></label>
-              <label class="field secret"><span>SMTP 密码</span><input name="smtp_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="smtp_password"> 清除已保存密码</span></label>
-              <label class="field"><span>SMTP 收件地址</span><input name="smtp_to" maxlength="127"></label>
-              <label class="field secret"><span>PushPlus Token</span><input name="pushplus_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="pushplus_token"> 清除已保存密钥</span></label>
-              <label class="field"><span>Gotify 地址</span><input name="gotify_url" maxlength="191"></label>
-              <label class="field secret"><span>Gotify Token</span><input name="gotify_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="gotify_token"> 清除已保存密钥</span></label>
-              <label class="field secret"><span>Telegram Bot Token</span><input name="telegram_bot_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="telegram_bot_token"> 清除已保存密钥</span></label>
-              <label class="field"><span>Telegram Chat ID</span><input name="telegram_chat_id" maxlength="63"></label>
-              <label class="field"><span>推送服务器地址</span><input name="server_url" maxlength="191"></label>
-              <label class="field secret"><span>推送服务器 Token</span><input name="server_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="server_token"> 清除已保存密钥</span></label>
-              <label class="field secret"><span>配置 AP 密码</span><input name="ap_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="ap_password"> 清除已保存密码</span></label>
-              <label class="field secret"><span>网页管理员密码</span><input name="web_admin_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="web_admin_password"> 清除已保存密码</span></label>
-            </div>
-          </fieldset>
+        <div class="top-actions">
+          <span id="connection-state" class="state state-idle">等待 USB 设备</span>
+          <button id="refresh-button" class="icon-button" title="刷新状态" aria-label="刷新状态">↻</button>
+        </div>
+      </header>
+
+      <section id="transport-section" class="transport-bar" aria-label="设备连接">
+        <div id="usb-transport" class="transport-group hidden">
+          <label class="device-select-label" for="usb-devices">USB 设备</label>
+          <select id="usb-devices" aria-label="已授权的 USB 串口设备">
+            <option value="">扫描已授权设备</option>
+          </select>
+          <button id="scan-usb-button" class="quiet-button">扫描 USB</button>
+          <button id="pair-usb-button" class="quiet-button">选择新设备</button>
+          <button id="connect-button" class="primary-button" disabled>连接设备</button>
+          <button id="disconnect-button" class="quiet-button hidden">断开</button>
+          <span class="transport-hint">首次使用需在浏览器弹窗中授权串口</span>
+        </div>
+        <form id="login-form" class="transport-group hidden">
+          <label for="admin-password">网页管理员密码</label>
+          <input id="admin-password" type="password" autocomplete="current-password" required>
+          <button class="primary-button" type="submit">进入管理端</button>
         </form>
-
-        <section id="ota-section" class="ota-section hidden">
-          <h3>固件更新</h3>
-          <form id="ota-form">
-            <input id="firmware-file" type="file" accept=".bin,application/octet-stream" required>
-            <button class="quiet-button" type="submit">上传并重启</button>
-          </form>
-        </section>
-
-        <section class="maintenance-actions">
-          <button id="reboot-button" class="quiet-button" disabled>重启设备</button>
-          <button id="reset-button" class="danger-button" disabled>恢复默认配置</button>
-        </section>
       </section>
 
-      <aside class="log-panel">
-        <div class="section-heading"><h2>设备日志</h2><button id="logs-button" class="icon-button" title="读取日志" aria-label="读取日志">↻</button></div>
-        <pre id="log-output" aria-live="polite"></pre>
-      </aside>
+      <main>
+        <div id="notice" class="notice" role="status">连接设备后读取配置和自检状态。</div>
+
+        <section id="initialize-view" class="init-view">
+          <div class="view-heading">
+            <div>
+              <p class="eyebrow">首次使用 / 故障恢复</p>
+              <h2>初始化向导</h2>
+            </div>
+            <span id="setup-reason" class="reason-label">等待设备自检</span>
+          </div>
+          <div class="wizard-layout">
+            <ol class="wizard-steps" aria-label="初始化进度">
+              <li class="wizard-step active" data-step-indicator="0"><span>1</span><div><strong>连接设备</strong><small>扫描并连接 USB</small></div></li>
+              <li class="wizard-step" data-step-indicator="1"><span>2</span><div><strong>网络设置</strong><small>选择 Wi-Fi 或流量模式</small></div></li>
+              <li class="wizard-step" data-step-indicator="2"><span>3</span><div><strong>安全与完成</strong><small>设置管理凭据并保存</small></div></li>
+            </ol>
+
+            <div class="wizard-content">
+              <section class="step-panel active" data-step-panel="0">
+                <h3>连接设备</h3>
+                <p class="step-copy">使用 USB 数据线连接 ESP32-C3。扫描会列出浏览器已授权的串口；首次连接请点“选择新设备”。</p>
+                <div class="device-summary">
+                  <span class="device-icon">USB</span>
+                  <div><strong id="selected-device-name">尚未连接</strong><small id="device-detail">本地维护通道 · 115200 baud</small></div>
+                  <span id="device-ready" class="state state-idle">未连接</span>
+                </div>
+                <p class="helper-text">USB 初始化入口不依赖 Wi-Fi。设备配网 AP 也会保留，方便手机在无法连接上游网络时进行配置。</p>
+              </section>
+
+              <section class="step-panel" data-step-panel="1" hidden>
+                <h3>网络与流量模式</h3>
+                <div class="switch-row">
+                  <div><strong>禁用蜂窝流量</strong><small>启用时仅选择 Wi-Fi 上行</small></div>
+                  <label class="switch"><input id="cellular-disabled" type="checkbox" checked><span class="switch-track"></span><span class="sr-only">禁用蜂窝流量</span></label>
+                </div>
+                <p class="helper-text">关闭此开关会选择 4G 模式。ML307 通信和流量控制仍需匹配硬件版本并经实机验证；当前固件默认不启动蜂窝 UART。</p>
+                <div id="wifi-setup-fields" class="network-fields">
+                  <div class="field-heading"><label for="setup-wifi-ssid">上游 Wi-Fi</label><button id="scan-wifi-button" class="quiet-button small-button" type="button">扫描 Wi-Fi</button></div>
+                  <select id="wifi-scan-results" class="wifi-results" aria-label="扫描到的 Wi-Fi 网络" size="4" hidden></select>
+                  <input id="setup-wifi-ssid" type="text" maxlength="32" autocomplete="off" placeholder="选择扫描结果或输入网络名称">
+                  <label class="field-label" for="setup-wifi-password">Wi-Fi 密码</label>
+                  <input id="setup-wifi-password" type="password" maxlength="63" autocomplete="new-password" placeholder="已保存密码留空表示不更改">
+                  <p class="helper-text compact">可选配置第二组 Wi-Fi，主网络不可用时尝试备用网络。</p>
+                  <div class="two-fields">
+                    <input id="setup-wifi2-ssid" type="text" maxlength="32" autocomplete="off" placeholder="备用 Wi-Fi 名称">
+                    <input id="setup-wifi2-password" type="password" maxlength="63" autocomplete="new-password" placeholder="备用 Wi-Fi 密码">
+                  </div>
+                </div>
+                <div id="cellular-notice" class="inline-warning hidden">已选择 4G 上行。蜂窝模块服务当前未启用时，设备会保持 USB/AP 维护入口。</div>
+              </section>
+
+              <section class="step-panel" data-step-panel="2" hidden>
+                <h3>安全设置与初始化</h3>
+                <p class="step-copy">配置 AP 和网页管理密码。初始化后会进入正式管理端；网络变更需重启设备生效。</p>
+                <div class="security-fields">
+                  <label class="field-label" for="setup-admin-phone">管理员手机号 <span>短信管理授权号码</span></label>
+                  <input id="setup-admin-phone" type="tel" maxlength="23" autocomplete="tel" placeholder="设置后用于接收设备管理短信">
+                  <label class="field-label" for="setup-ap-password">配网 AP 密码 <span>至少 8 位</span></label>
+                  <input id="setup-ap-password" type="password" minlength="8" maxlength="63" autocomplete="new-password" placeholder="已设置密码留空表示不更改">
+                  <label class="field-label" for="setup-admin-password">网页管理员密码 <span>至少 12 位</span></label>
+                  <input id="setup-admin-password" type="password" minlength="12" maxlength="64" autocomplete="new-password" placeholder="已设置密码留空表示不更改">
+                </div>
+                <div class="ap-behavior">
+                  <strong>Wi-Fi 配网兜底</strong>
+                  <p>上电自检约 10 秒后，首次配网广播 <code>SMS-Forwarder-AP</code>。连上家庭 Wi-Fi 后关闭配网 AP；之后若上游 Wi-Fi 断开，会重新广播 <code>ESP32-AP-xxxxxx</code> 供手机恢复配置。手机连接设备 AP 后，在浏览器打开 <code>http://192.168.4.1/</code>。</p>
+                </div>
+                <label class="check-row"><input id="setup-confirm" type="checkbox"> 我已确认配置内容，并授权写入本设备</label>
+              </section>
+
+              <div class="wizard-footer">
+                <button id="wizard-back" class="quiet-button" type="button" disabled>上一步</button>
+                <span id="wizard-step-label">第 1 步，共 3 步</span>
+                <button id="wizard-next" class="primary-button" type="button" disabled>下一步</button>
+                <button id="setup-save" class="primary-button hidden" type="button">保存并进入管理端</button>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="management-view" class="management-view hidden">
+          <section id="overview" class="overview-section">
+            <div class="view-heading">
+              <div><p class="eyebrow">运行状态</p><h2>设备概览</h2></div>
+              <button id="reinitialize-button" class="quiet-button" type="button">重新初始化</button>
+            </div>
+            <div class="status-grid">
+              <article class="status-tile"><span>固件版本</span><strong id="status-version">--</strong><small>ESP32-C3</small></article>
+              <article class="status-tile"><span>上行模式</span><strong id="status-mode">--</strong><small id="status-cellular">蜂窝路径 --</small></article>
+              <article class="status-tile"><span>Wi-Fi 上行</span><strong id="status-wifi">--</strong><small>STA 连接状态</small></article>
+              <article class="status-tile"><span>配网 AP</span><strong id="status-ap">--</strong><small>Wi-Fi 故障恢复入口</small></article>
+            </div>
+          </section>
+
+          <form id="config-form">
+            <fieldset disabled>
+              <section id="network-settings" class="management-section">
+                <div class="section-heading"><div><p class="eyebrow">01 · CONNECTIVITY</p><h2>网络与流量</h2></div><button id="scan-wifi-manage" class="quiet-button" type="button">扫描 Wi-Fi</button></div>
+                <div class="management-grid">
+                  <label class="field"><span>流量模式</span><select name="mode"><option value="wifi">Wi-Fi（蜂窝流量禁用）</option><option value="cellular">4G（蜂窝流量启用）</option></select></label>
+                  <label class="field"><span>Wi-Fi 名称</span><input name="wifi_ssid" maxlength="32" autocomplete="off"></label>
+                  <label class="field secret"><span>Wi-Fi 密码</span><input name="wifi_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="wifi_password"> 清除已保存密码</span></label>
+                  <label class="field"><span>备用 Wi-Fi 名称</span><input name="wifi2_ssid" maxlength="32" autocomplete="off"></label>
+                  <label class="field secret"><span>备用 Wi-Fi 密码</span><input name="wifi2_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="wifi2_password"> 清除已保存密码</span></label>
+                  <label class="field secret"><span>配网 AP 密码</span><input name="ap_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="ap_password"> 清除已保存密码</span></label>
+                </div>
+                <div class="mode-note"><strong>4G / MIX 能力状态</strong><span>当前设备固件仅接受 Wi-Fi 或 4G 配置；MIX 模式及蜂窝流量控制待 ML307 型号、UART 引脚与协议完成实机验证后启用。</span></div>
+              </section>
+
+              <section id="service-settings" class="management-section">
+                <div class="section-heading"><div><p class="eyebrow">02 · SERVICE</p><h2>设备、心跳与通知</h2></div></div>
+                <div class="management-grid">
+                  <label class="field"><span>管理员手机号</span><input name="admin_phone" maxlength="23" autocomplete="off"></label>
+                  <label class="field"><span>设备手机号</span><input name="own_phone" maxlength="23" autocomplete="off"></label>
+                  <label class="field"><span>设备备注</span><input name="note" maxlength="95"></label>
+                  <label class="field"><span>心跳间隔（秒）</span><input name="heartbeat_sec" type="number" min="60" max="604800"></label>
+                  <label class="field"><span>流量保活间隔（秒）</span><input name="keepalive_sec" type="number" min="300" max="2592000"></label>
+                  <label class="field"><span>SMTP 服务器</span><input name="smtp_host" maxlength="127"></label>
+                  <label class="field"><span>SMTP 端口</span><input name="smtp_port" inputmode="numeric" maxlength="7"></label>
+                  <label class="field"><span>SMTP 用户</span><input name="smtp_user" maxlength="95"></label>
+                  <label class="field secret"><span>SMTP 密码</span><input name="smtp_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="smtp_password"> 清除已保存密码</span></label>
+                  <label class="field"><span>SMTP 收件地址</span><input name="smtp_to" maxlength="127"></label>
+                  <label class="field secret"><span>PushPlus Token</span><input name="pushplus_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="pushplus_token"> 清除已保存密钥</span></label>
+                  <label class="field"><span>Gotify 地址</span><input name="gotify_url" maxlength="191"></label>
+                  <label class="field secret"><span>Gotify Token</span><input name="gotify_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="gotify_token"> 清除已保存密钥</span></label>
+                  <label class="field secret"><span>Telegram Bot Token</span><input name="telegram_bot_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="telegram_bot_token"> 清除已保存密钥</span></label>
+                  <label class="field"><span>Telegram Chat ID</span><input name="telegram_chat_id" maxlength="63"></label>
+                  <label class="field"><span>自定义推送服务器</span><input name="server_url" maxlength="191"></label>
+                  <label class="field secret"><span>推送服务器 Token</span><input name="server_token" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="server_token"> 清除已保存密钥</span></label>
+                  <label class="field secret"><span>网页管理员密码</span><input name="web_admin_password" type="password" autocomplete="new-password"><span class="clear-row"><input type="checkbox" data-clear="web_admin_password"> 清除已保存密码</span></label>
+                </div>
+                <div class="feature-status">
+                  <strong>短信与通知能力</strong>
+                  <p>管理员手机号、设备手机号、双路 Wi-Fi、心跳与保活间隔可保存到配置。短信/来电服务和推送发送器尚未在当前固件中实现或验证，相关能力在接入前保持停用。</p>
+                  <div class="feature-tags"><span>WIFI 模式</span><span>4G 模式 · 待硬件验证</span><span>MIX 模式 · 待实现</span><span>来电提醒 · 待接入</span><span>短信限额 · 待接入</span><span>定期流量消耗 · 待接入</span><span>心跳参数</span><span>双路 Wi-Fi</span></div>
+                  <div class="sms-command-block">
+                    <strong>管理员短信指令 · 固件待接入</strong>
+                    <span class="helper-text compact">启用后仅接受已设置的管理员手机号发送的指令。当前版本不会处理这些短信。</span>
+                    <div class="command-table" role="table" aria-label="短信指令">
+                      <div class="command-row command-head" role="row"><span>指令</span><span>含义</span><span>状态</span></div>
+                      <div class="command-row" role="row"><code>SMS:factory reset</code><span>恢复出厂设置</span><span>待接入</span></div>
+                      <div class="command-row" role="row"><code>SMS:reset</code><span>设备复位</span><span>待接入</span></div>
+                      <div class="command-row" role="row"><code>SMS:get ip</code><span>获取设备 IP 地址</span><span>待接入</span></div>
+                    </div>
+                    <p class="helper-text compact">短信发送限额目标：开机 10 分钟内最多 3 条，每小时最多 10 条。当前固件尚未实现短信发送。</p>
+                  </div>
+                  <div class="channel-list"><span>飞书群</span><span>钉钉群</span><span>企业微信群</span><span>QQ 邮箱</span><span>自定义</span><span>Telegram Bot</span><span>Bark</span><span>PushPlus</span><span>Server 酱</span><span>Gotify</span></div>
+                </div>
+              </section>
+
+              <div class="form-actions"><button id="export-button" class="quiet-button" type="button">导出配置</button><label class="file-button">导入配置<input id="import-file" type="file" accept="application/json,.json"></label><button id="save-button" class="primary-button" type="button" disabled>保存设置</button></div>
+            </fieldset>
+          </form>
+
+          <section id="maintenance" class="management-section maintenance-section">
+            <div class="section-heading"><div><p class="eyebrow">03 · MAINTENANCE</p><h2>维护与日志</h2></div><button id="logs-button" class="icon-button" title="读取日志" aria-label="读取日志">↻</button></div>
+            <div id="ota-section" class="ota-row hidden"><div><strong>固件更新</strong><small>通过设备 Wi-Fi 管理页上传固件</small></div><form id="ota-form"><input id="firmware-file" type="file" accept=".bin,application/octet-stream" required><button class="quiet-button" type="submit">上传并重启</button></form></div>
+            <pre id="log-output" aria-live="polite"></pre>
+            <div class="maintenance-actions"><button id="reboot-button" class="quiet-button" disabled>重启设备</button><button id="reset-button" class="danger-button" disabled>恢复默认配置</button></div>
+          </section>
+        </section>
+      </main>
+      <footer class="page-footer">本地 USB 维护入口始终可用 · 配置保存于设备</footer>
     </div>
-  </main>
+  </div>
   <script src="/app.js" defer></script>
 </body>
 </html>

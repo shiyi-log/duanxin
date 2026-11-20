@@ -1,0 +1,139 @@
+Command: C:\Espressif\tools\python\v5.5.1\venv\Scripts\python.exe C:\Espressif\v5.5.1\esp-idf\tools/idf_monitor.py -p COM3 -b 115200 --toolchain-prefix riscv32-esp-elf- --target esp32c3 --revision 3 --decode-panic backtrace C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware\build\wifi_forwarder.elf C:\Users\399\Documents\ChatGPT\duanxin\esp32c3_firmware\build\bootloader\bootloader.elf --force-color -m 'C:\Espressif\tools\python\v5.5.1\venv\Scripts\python.exe' 'C:\Espressif\v5.5.1\esp-idf\tools\idf.py' '-p' 'COM3'
+om version: 9387209
+[0;32mI (292) wifi:wifi driver task: 3fcadb90, prio:23, stack:6656, core=0[0m
+[0;32mI (292) wifi:wifi firmware version: 14da9b7[0m
+[0;32mI (302) wifi:wifi certification version: v7.0[0m
+[0;32mI (302) wifi:config NVS flash: enabled[0m
+[0;32mI (302) wifi:config nano formatting: disabled[0m
+[0;32mI (302) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (302) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (302) wifi:Init management short buffer num: 32[0m
+[0;32mI (302) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (302) wifi:Init static tx FG buffer num: 2[0m
+[0;32mI (302) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (302) wifi:Init static rx buffer num: 10[0m
+[0;32mI (302) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (302) wifi_init: rx ba win: 6[0m
+[0;32mI (302) wifi_init: accept mbox: 6[0m
+[0;32mI (302) wifi_init: tcpip mbox: 32[0m
+[0;32mI (302) wifi_init: udp mbox: 6[0m
+[0;32mI (302) wifi_init: tcp mbox: 6[0m
+[0;32mI (302) wifi_init: tcp tx win: 5760[0m
+[0;32mI (302) wifi_init: tcp rx win: 5760[0m
+[0;32mI (302) wifi_init: tcp mss: 1440[0m
+[0;32mI (302) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (302) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (322) phy_init: phy_version 1201,bae5dd99,Mar  3 2025,15:36:21[0m
+[0;32mI (362) wifi:mode : sta (9c:cc:01:c5:5e:80)[0m
+[0;32mI (362) wifi:enable tsf[0m
+[0;32mI (402) web: Configuration page ready at http://192.168.4.1/[0m
+[0;33mW (402) app: Startup remains unconfirmed; boot-failure guard is retained (usb=1 config=0 safe=1 net=0)[0m
+[0;32mI (402) main_task: Returned from app_main()[0m
+[0;32mI (10402) wifi:mode : sta (9c:cc:01:c5:5e:80) + softAP (9c:cc:01:c5:5e:81)[0m
+[0;32mI (10402) wifi:Total power save buffer number: 16[0m
+[0;32mI (10402) wifi:Init max length of beacon: 752/752[0m
+[0;32mI (10402) wifi:Init max length of beacon: 752/752[0m
+[0;32mI (10412) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1[0m
+[0;32mI (10412) wifi:Total power save buffer number: 16[0m
+[0;32mI (10412) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1[0m
+[0;33mW (10412) app: Setup AP has no ESP-ROM:esp32c3-api1-20210207[0m
+Build:Feb  7 2021
+rst:0x15 (USB_UART_CHIP_RESET),boot:0x8 (SPI_FAST_FLASH_BOOT)
+Saved PC:0x40383da2
+SPIWP:0xee
+mode:DIO, clock div:1
+load:0x3fcd5830,len:0x15ac
+load:0x403cbf10,len:0xba4
+load:0x403ce710,len:0x30ac
+entry 0x403cbf1a
+[0;32mI (24) boot: ESP-IDF v5.5.1 2nd stage bootloader[0m
+[0;32mI (24) boot: compile time Nov 17 2026 05:18:34[0m
+[0;32mI (24) boot: chip revision: v0.4[0m
+[0;32mI (25) boot: efuse block revision: v1.3[0m
+[0;32mI (25) boot.esp32c3: SPI Speed      : 80MHz[0m
+[0;32mI (25) boot.esp32c3: SPI Mode       : DIO[0m
+[0;32mI (25) boot.esp32c3: SPI Flash Size : 4MB[0m
+[0;32mI (25) boot: Enabling RNG early entropy source...[0m
+[0;32mI (25) boot: Partition Table:[0m
+[0;32mI (25) boot: ## Label            Usage          Type ST Offset   Length[0m
+[0;32mI (26) boot:  0 nvs              WiFi data        01 02 00009000 00005000[0m
+[0;32mI (26) boot:  1 otadata          OTA data         01 00 0000e000 00002000[0m
+[0;32mI (26) boot:  2 app0             OTA app          00 10 00010000 00140000[0m
+[0;32mI (26) boot:  3 app1             OTA app          00 11 00150000 00140000[0m
+[0;32mI (27) boot:  4 storage          Unknown data     01 82 00290000 00160000[0m
+[0;32mI (27) boot:  5 coredump         Unknown data     01 03 003f0000 00010000[0m
+[0;32mI (27) boot: End of partition table[0m
+[0;32mI (28) esp_image: segment 0: paddr=00010020 vaddr=3c0c0020 size=1e8d4h (125140) map[0m
+[0;32mI (48) esp_image: segment 1: paddr=0002e8fc vaddr=3fc95600 size=0171ch (  5916) load[0m
+[0;32mI (49) esp_image: segment 2: paddr=00030020 vaddr=42000020 size=b0580h (722304) map[0m
+[0;32mI (165) esp_image: segment 3: paddr=000e05a8 vaddr=3fc96d1c size=015e8h (  5608) load[0m
+[0;32mI (166) esp_image: segment 4: paddr=000e1b98 vaddr=40380000 size=15598h ( 87448) load[0m
+[0;32mI (182) esp_image: segment 5: paddr=000f7138 vaddr=50000000 size=0002ch (    44) load[0m
+[0;32mI (189) boot: Loaded app from partition at offset 0x10000[0m
+[0;32mI (189) boot: Disabling RNG early entropy source...[0m
+[0;32mI (190) cpu_start: Unicore app[0m
+[0;32mI (198) cpu_start: Pro cpu start user code[0m
+[0;32mI (198) cpu_start: cpu freq: 160000000 Hz[0m
+[0;32mI (199) app_init: Application information:[0m
+[0;32mI (199) app_init: Project name:     wifi_forwarder[0m
+[0;32mI (199) app_init: App version:      244afef-dirty[0m
+[0;32mI (199) app_init: Compile time:     Nov 17 2026 09:11:14[0m
+[0;32mI (199) app_init: ELF file SHA256:  2a257d5e3...[0m
+[0;32mI (199) app_init: ESP-IDF:          v5.5.1[0m
+[0;32mI (199) efuse_init: Min chip rev:     v0.3[0m
+[0;32mI (199) efuse_init: Max chip rev:     v1.99 [0m
+[0;32mI (199) efuse_init: Chip rev:         v0.4[0m
+[0;32mI (200) heap_init: Initializing. RAM available for dynamic allocation:[0m
+[0;32mI (200) heap_init: At 3FCA01F0 len 0001FE10 (127 KiB): RAM[0m
+[0;32mI (200) heap_init: At 3FCC0000 len 0001C710 (113 KiB): Retention RAM[0m
+[0;32mI (200) heap_init: At 3FCDC710 len 00002950 (10 KiB): Retention RAM[0m
+[0;32mI (200) heap_init: At 5000002C len 00001FBC (7 KiB): RTCRAM[0m
+[0;32mI (201) spi_flash: detected chip: generic[0m
+[0;32mI (201) spi_flash: flash io: dio[0m
+[0;32mI (202) sleep_gpio: Configure to isolate all GPIO pins in sleep state[0m
+[0;32mI (202) sleep_gpio: Enable automatic switching of GPIO sleep configuration[0m
+[0;32mI (203) main_task: Started on CPU0[0m
+[0;32mI (203) main_task: Calling app_main()[0m
+
+WIFI Forwarder maintenance console ready. Type help.
+[0;33mW (213) app: Starting USB maintenance and delayed Wi-Fi recovery AP[0m
+[0;32mI (223) pp: pp rom version: 9387209[0m
+[0;32mI (223) net80211: net80211 rom version: 9387209[0m
+[0;32mI (233) wifi:wifi driver task: 3fcadb90, prio:23, stack:6656, core=0[0m
+[0;32mI (233) wifi:wifi firmware version: 14da9b7[0m
+[0;32mI (243) wifi:wifi certification version: v7.0[0m
+[0;32mI (243) wifi:config NVS flash: enabled[0m
+[0;32mI (243) wifi:config nano formatting: disabled[0m
+[0;32mI (243) wifi:Init data frame dynamic rx buffer num: 32[0m
+[0;32mI (243) wifi:Init static rx mgmt buffer num: 5[0m
+[0;32mI (243) wifi:Init management short buffer num: 32[0m
+[0;32mI (243) wifi:Init dynamic tx buffer num: 32[0m
+[0;32mI (243) wifi:Init static tx FG buffer num: 2[0m
+[0;32mI (243) wifi:Init static rx buffer size: 1600[0m
+[0;32mI (243) wifi:Init static rx buffer num: 10[0m
+[0;32mI (243) wifi:Init dynamic rx buffer num: 32[0m
+[0;32mI (243) wifi_init: rx ba win: 6[0m
+[0;32mI (243) wifi_init: accept mbox: 6[0m
+[0;32mI (243) wifi_init: tcpip mbox: 32[0m
+[0;32mI (243) wifi_init: udp mbox: 6[0m
+[0;32mI (243) wifi_init: tcp mbox: 6[0m
+[0;32mI (243) wifi_init: tcp tx win: 5760[0m
+[0;32mI (243) wifi_init: tcp rx win: 5760[0m
+[0;32mI (243) wifi_init: tcp mss: 1440[0m
+[0;32mI (243) wifi_init: WiFi IRAM OP enabled[0m
+[0;32mI (253) wifi_init: WiFi RX IRAM OP enabled[0m
+[0;32mI (263) phy_init: phy_version 1201,bae5dd99,Mar  3 2025,15:36:21[0m
+[0;32mI (313) wifi:mode : sta (9c:cc:01:c5:5e:80)[0m
+[0;32mI (313) wifi:enable tsf[0m
+[0;32mI (353) web: Configuration page ready at http://192.168.4.1/[0m
+[0;33mW (353) app: Startup remains unconfirmed; boot-failure guard is retained (usb=1 config=0 safe=1 net=0)[0m
+[0;32mI (353) main_task: Returned from app_main()[0m
+[0;32mI (10353) wifi:mode : sta (9c:cc:01:c5:5e:80) + softAP (9c:cc:01:c5:5e:81)[0m
+[0;32mI (10353) wifi:Total power save buffer number: 16[0m
+[0;32mI (10353) wifi:Init max length of beacon: 752/752[0m
+[0;32mI (10353) wifi:Init max length of beacon: 752/752[0m
+[0;32mI (10363) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1[0m
+[0;32mI (10363) wifi:Total power save buffer number: 16[0m
+[0;32mI (10363) esp_netif_lwip: DHCP server started on interface WIFI_AP_DEF with IP: 192.168.4.1[0m
+[0;33mW (10363) app: Setup AP has no WPA2 password; set one before field deployment[0m
+[0;32mI (10373) app: Setup AP active: SMS-Forwarder-AP[0m

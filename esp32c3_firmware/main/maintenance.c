@@ -11,6 +11,8 @@
 #include "esp_log.h"
 #include "esp_ota_ops.h"
 #include "esp_system.h"
+#include "driver/usb_serial_jtag.h"
+#include "driver/usb_serial_jtag_vfs.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 
@@ -53,6 +55,8 @@ static cJSON *status_json(void)
     cJSON_AddBoolToObject(status, "config_valid", g_app_runtime.config_valid);
     cJSON_AddBoolToObject(status, "safe_mode", g_app_runtime.safe_mode);
     cJSON_AddBoolToObject(status, "wifi_connected", g_app_runtime.wifi_connected);
+    cJSON_AddBoolToObject(status, "ap_active", g_app_runtime.ap_active);
+    cJSON_AddStringToObject(status, "ap_ssid", g_app_runtime.ap_ssid);
     cJSON_AddBoolToObject(status, "web_available", g_app_runtime.web_available);
     cJSON_AddBoolToObject(status, "modem_available", g_app_runtime.modem_available);
     cJSON_AddStringToObject(status, "mode", s_config ? s_config->mode : "unknown");
@@ -64,7 +68,11 @@ static cJSON *logs_json(void)
 {
     cJSON *array = cJSON_CreateArray();
     if (!array) return NULL;
-    char snapshot[LOG_RING_COUNT][LOG_LINE_SIZE];
+    char (*snapshot)[LOG_LINE_SIZE] = malloc(sizeof(s_log_ring));
+    if (!snapshot) {
+        cJSON_Delete(array);
+        return NULL;
+    }
     unsigned count;
     portENTER_CRITICAL(&s_log_lock);
     count = s_log_count;
@@ -73,7 +81,21 @@ static cJSON *logs_json(void)
         memcpy(snapshot[i], s_log_ring[(start + i) % LOG_RING_COUNT], LOG_LINE_SIZE);
     }
     portEXIT_CRITICAL(&s_log_lock);
-    for (unsigned i = 0; i < count; ++i) cJSON_AddItemToArray(array, cJSON_CreateString(snapshot[i]));
+    bool ok = true;
+    for (unsigned i = 0; i < count; ++i) {
+        cJSON *entry = cJSON_CreateString(snapshot[i]);
+        if (!entry || !cJSON_AddItemToArray(array, entry)) {
+            cJSON_Delete(entry);
+            ok = false;
+            break;
+        }
+    }
+    memset(snapshot, 0, sizeof(s_log_ring));
+    free(snapshot);
+    if (!ok) {
+        cJSON_Delete(array);
+        return NULL;
+    }
     return array;
 }
 
@@ -105,8 +127,18 @@ cJSON *maintenance_handle_json(const cJSON *request)
     if (!cJSON_IsString(op_item) || !op_item->valuestring) return error_response(request, "missing op");
     const char *op = op_item->valuestring;
 
+    if (strcmp(op, "wifi.scan") == 0) {
+        cJSON *records = NULL;
+        esp_err_t err = app_wifi_scan(&records);
+        if (err != ESP_OK) return error_response(request, esp_err_to_name(err));
+        return make_response(request, true, records, NULL);
+    }
     if (strcmp(op, "status") == 0) return make_response(request, true, status_json(), NULL);
-    if (strcmp(op, "logs") == 0) return make_response(request, true, logs_json(), NULL);
+    if (strcmp(op, "logs") == 0) {
+        cJSON *data = logs_json();
+        if (!data) return error_response(request, "unable to build log snapshot");
+        return make_response(request, true, data, NULL);
+    }
     if (strcmp(op, "config.get") == 0) return make_response(request, true, fw_config_to_json(s_config, false), NULL);
     if (strcmp(op, "config.export") == 0) return make_response(request, true, fw_config_to_json(s_config, true), NULL);
 
@@ -217,6 +249,7 @@ static void cli_help(void)
            "  help                       Show this help\r\n"
            "  status                     Show runtime state\r\n"
            "  logs                       Show recent log ring\r\n"
+           "  wifi scan                  Scan nearby Wi-Fi networks\r\n"
            "  config show                Show config with secrets masked\r\n"
            "  config set KEY VALUE       Stage a value (use quotes only for JSON API)\r\n"
            "  config save                Validate and save staged config\r\n"
@@ -252,6 +285,12 @@ static void cli_command(char *line)
     }
     if (strcmp(line, "logs") == 0) {
         cJSON *request = cJSON_Parse("{\"id\":\"cli\",\"op\":\"logs\"}");
+        print_response(request, maintenance_handle_json(request));
+        cJSON_Delete(request);
+        return;
+    }
+    if (strcmp(line, "wifi scan") == 0) {
+        cJSON *request = cJSON_Parse("{\"id\":\"cli\",\"op\":\"wifi.scan\"}");
         print_response(request, maintenance_handle_json(request));
         cJSON_Delete(request);
         return;
@@ -310,7 +349,7 @@ static void cli_command(char *line)
 static void maintenance_task(void *arg)
 {
     (void)arg;
-    char line[CONSOLE_LINE_SIZE];
+    static char line[CONSOLE_LINE_SIZE];
     printf("\r\nWIFI Forwarder maintenance console ready. Type help.\r\n");
     while (true) {
         if (!fgets(line, sizeof(line), stdin)) {
@@ -321,9 +360,27 @@ static void maintenance_task(void *arg)
     }
 }
 
-void maintenance_start(fw_config_t *config)
+esp_err_t maintenance_start(fw_config_t *config)
 {
+    if (!config) return ESP_ERR_INVALID_ARG;
+
+    if (!usb_serial_jtag_is_driver_installed()) {
+        usb_serial_jtag_driver_config_t usb_config = USB_SERIAL_JTAG_DRIVER_CONFIG_DEFAULT();
+        usb_config.rx_buffer_size = CONSOLE_LINE_SIZE;
+        usb_config.tx_buffer_size = 2048;
+        esp_err_t err = usb_serial_jtag_driver_install(&usb_config);
+        if (err != ESP_OK) {
+            ESP_LOGE(TAG, "Could not install buffered USB Serial/JTAG driver: %s",
+                     esp_err_to_name(err));
+            return err;
+        }
+    }
+    usb_serial_jtag_vfs_use_driver();
+
     s_config = config;
     s_original_vprintf = esp_log_set_vprintf(tee_log);
-    xTaskCreate(maintenance_task, "usb_maintenance", 7168, NULL, 4, NULL);
+    if (xTaskCreate(maintenance_task, "usb_maintenance", 12288, NULL, 4, NULL) != pdPASS) {
+        return ESP_ERR_NO_MEM;
+    }
+    return ESP_OK;
 }

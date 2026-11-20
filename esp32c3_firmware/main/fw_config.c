@@ -1,5 +1,6 @@
 #include "fw_config.h"
 
+#include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -98,9 +99,16 @@ esp_err_t fw_config_set(fw_config_t *config, const char *key, const char *value)
 {
     if (!key || !value) return ESP_ERR_INVALID_ARG;
     if (strcmp(key, "heartbeat_sec") == 0 || strcmp(key, "keepalive_sec") == 0) {
+        if (!value[0]) return ESP_ERR_INVALID_ARG;
+        for (const char *digit = value; *digit; ++digit) {
+            if (*digit < '0' || *digit > '9') return ESP_ERR_INVALID_ARG;
+        }
         char *end = NULL;
+        errno = 0;
         unsigned long number = strtoul(value, &end, 10);
-        if (!value[0] || !end || *end || number > UINT32_MAX) return ESP_ERR_INVALID_ARG;
+        if (errno == ERANGE || !end || end == value || *end || number > UINT32_MAX) {
+            return ESP_ERR_INVALID_ARG;
+        }
         if (key[0] == 'h') config->heartbeat_sec = (uint32_t)number;
         else config->keepalive_sec = (uint32_t)number;
         return ESP_OK;
